@@ -1,2 +1,89 @@
-# dns-shop-review-scrapper-analyzer
-Sometimes it is difficult to find a good review of a product from its real buyers.This project aims to help with scrapping and analyzing product reviews from the **dns-shop** website.
+# Анализатор отзывов DNS Shop
+
+Инструмент для автоматического сбора и анализа отзывов покупателей с сайта **dns-shop.ru**. Отзывы извлекаются через браузерную автоматизацию, разделяются на позитивные и негативные части, из них извлекаются ключевые фразы, а результат визуализируется в виде облаков слов.
+
+## Возможности
+
+- **Парсинг отзывов** через Selenium + undetected_chromedriver с обходом защиты от ботов через поиск в Яндексе.
+- **Разделение на позитив/негатив** - автоматический разбор структуры отзыва DNS (достоинства, недостатки, комментарий).
+- **Препроцессинг текста** - приведение к нижнему регистру, удаление пунктуации, нормализация пробелов.
+- **Извлечение ключевых фраз** через KeyBERT с настройкой разнообразия и порога достоверности.
+- **Генерация облаков слов** для позитивных и негативных отзывов отдельно.
+- **Веб-интерфейс** на Flask - форма ввода URL страницы товара, страница результатов с двумя облаками слов.
+- **Пул парсеров** - повторное использование браузерных сессий для эффективной работы.
+
+## Структура проекта
+
+```
+dns_shop_review_scrapper_analyzer/
+├── app.py                     # Flask-приложение, маршруты, пайплайн анализа
+├── config.py                  # Все конфигурационные параметры
+├── requirements.txt           # Зависимости Python
+├── scripts/
+│   ├── __init__.py            # Коды ошибок
+│   ├── parser.py              # Парсер (Selenium, BeautifulSoup)
+│   ├── parser_pool.py         # Пул объектов парсера (Queue)
+│   ├── analyzer.py            # Извлечение ключевых фраз KeyBERT
+│   ├── text_processing.py     # Разделение, препроцессинг, стоп-слова, лемматизация
+│   └── vizualizer.py          # Генератор облака слов
+├── templates/
+│   ├── index.html
+│   ├── analyzing.html
+│   ├── results.html
+│   └── error.html
+├── data/                      # Вспомогательные данные (cookies, raw HTML, изображения)
+└── static/                    # Статические файлы (ссылки на изображения из data/)
+```
+
+## Установка
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+## Запуск
+
+```bash
+python3 app.py
+```
+
+Сервер запустится на `http://127.0.0.1:5000`.
+
+## Конфигурация
+
+Все настройки хранятся в `config.py`:
+
+| Параметр | Значение | Описание |
+|---|---|---|
+| `PARSER_POOL_SIZE` | 2 | Количество одновременных браузерных сессий |
+| `PARSER_POOL_BLOCK` | True | Блок операции пула до таймаута |
+| `PARSER_POOL_TIMEOUT` | 5 | Время ожидания операций пула (сек.) |
+| `BROWSER_HEADLESS` | False | Режим браузера без UI |
+| `BROWSER_CITE_OPENING_ATTEMPTS` | 2 | Попытки открытия сайта при ошибке 403 |
+| `ANALYZER_MIN_REVIEW_LEN_THRESHOLD` | 5 | Мин. длина отзыва (кол-во слов) |
+| `ANALYZER_TO_LOWERCASE` | True | Приведение текстов к нижнему регистру |
+| `ANALYZER_ERASE_PUNCTUATION` | False | Удаление пунктуации |
+| `ANALYZER_TOP_N_KEYWORDS` | 2 | Ключевых фраз на отзыв |
+| `ANALYZER_CONFIDENCE_THRESHOLD` | 0.5 | Порог достоверности KeyBERT |
+| `ANALYZER_KEYPHRASE_NGRAM_RANGE` | (2, 3) | Диапазон n-грамм |
+| `ANALYZER_KEYBERT_DIVERSITY` | 0.7 | Разнообразие ключевых фраз |
+| `ANALYZER_ALLOWED_STOPWORDS` | `['не', 'ни', 'но']` | Исключения из стоп-слов |
+| `WORDCLOUD_WIDTH / HEIGHT` | 1000 | Размеры изображения (пиксели) |
+| `WORDCLOUD_BACKGROUND_COLOR` | `black` | Цвет фона |
+| `WORDCLOUD_COLORMAP` | `Pastel1` | Цветовая схема |
+| `WORDCLOUD_COLLOCATIONS` | True | Использовать n-граммы в облаке слов |
+| `WORDCLOUD_MARGIN` | 20 | Отступ изображения (пиксели) |
+
+## Пример работы
+
+### Положительные черты
+
+<p align="center">
+  <img src="data/positive.png" alt="positive" height="600">
+</p>
+
+### Негативные черты
+
+<p align="center">
+  <img src="data/negative.png" alt="positive" height="600">
+</p>
