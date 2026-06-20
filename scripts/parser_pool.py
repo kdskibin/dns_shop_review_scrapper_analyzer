@@ -24,6 +24,7 @@ class ParserPool:
             parser = DNS_Shop_Parser(browser_headless)
             self._pool.put(parser, self._block, self._timeout)
 
+
     def get(self):
         """
         Получает парсер из пула.
@@ -58,4 +59,3 @@ class ParserPool:
             return True
         except Full:
             return None
-            

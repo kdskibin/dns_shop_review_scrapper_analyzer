@@ -1,8 +1,7 @@
 from keybert import KeyBERT
 
-
 def extract_keyphrases(
-    corpus_list: list[str], model: KeyBERT, top_n: int, keyphrase_ngram_range: tuple[int, int] | None = None, diversity: float = 0.7) -> list:
+    corpus_list: list[str], model: KeyBERT, top_n: int, keyphrase_ngram_range: tuple[int, int] | None = None, diversity: float = 0.7) -> list[list[tuple[str, float]]]:
     """
     Извлекает ключевые N‑граммы из списка текстов.
 
@@ -15,14 +14,14 @@ def extract_keyphrases(
     top_n : int
         Количество ключевых фраз, возвращаемых для каждого текста.
     keyphrase_ngram_range : tuple[int, int] | None, optional
-        Диапазон N‑грамм, которые можно извлекать).
+        Диапазон N‑грамм, которые можно извлекать (по умолчанию `(1, 3)`).
     diversity : float, optional
         Параметр `diversity` для функции `use_mmr=True`. Чем выше значение,
         тем более разнообразными будут ключевые фразы.
 
     Returns
     -------
-    list
+    list[list[tuple[str, float]]]
         Список списков кортежей вида `(ключевая_фраза, score)`,
         где `score` – косинусное сходство с исходным текстом.
     """
@@ -41,13 +40,13 @@ def extract_keyphrases(
     return raw_keywords_list
 
 
-def get_dict_keyphrases(keywords_lists: list[tuple[str, float]], threshold: float) -> dict:
+def get_dict_keyphrases(keywords_lists: list[list[tuple[str, float]]], threshold: float) -> dict[str, float]:
     """
-    Преобразует список ключевых фраз в словарь с учётом порога качества.
+    Преобразует список ключевых фраз в словарь с том порога качества.
 
     Parameters
     ----------
-    keywords_lists : list[tuple[str, float]]
+    keywords_lists : list[list[tuple[str, float]]]
         Список списков кортежей вида `(ключевая_фраза, score)`,
         полученных функцией `extract_keyphrases`.
     threshold : float
@@ -56,7 +55,7 @@ def get_dict_keyphrases(keywords_lists: list[tuple[str, float]], threshold: floa
 
     Returns
     -------
-    dict
+    dict[str, float]
         Словарь вида `{ключевая_фраза: score}`, содержащий только те фразы,
         где `score` >= `threshold`.
     """

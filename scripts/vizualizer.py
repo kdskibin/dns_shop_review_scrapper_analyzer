@@ -1,5 +1,7 @@
+"""Генератор облака слов из частотного словаря ключевых фраз."""
 from wordcloud import WordCloud
 from config import Config
+
 
 class WordCloudGenerator:
     """
@@ -8,7 +10,7 @@ class WordCloudGenerator:
     Параметры визуализации берутся из модуля `config`.
     """
     def __init__(self):
-        pass
+        """Инициализация WordCloudGenerator. Параметрами управляет Config."""
 
     @classmethod
     def generate(cls, freq_dict: dict[str, float], filepath, save_image=True):
@@ -42,4 +44,3 @@ class WordCloudGenerator:
         if save_image:
             image.save(filepath)
         return image
-

@@ -1,36 +1,38 @@
+"""Обработка текстов отзывов: разделение, препроцессинг, лемматизация, стоп-слова."""
 import re
 import nltk
 from pymystem3 import Mystem
 
-def convert_to_list_of_reviews(reviews: list[dict], review_len_treshold: int):
+
+def convert_to_list_of_reviews(reviews: list[dict], review_len_threshold: int) -> list[str]:
     """
     Преобразует список словарей (отзывов) в список строк,
-    где каждая строка – объединение частей отзыва.
+    где каждая строка - объединение частей отзыва.
 
     Parameters
     ----------
     reviews : list[dict]
         Список словарей с отзывами, полученных парсером.
-    review_len_treshold : int, optional
+    review_len_threshold : int
         Минимальная длина части (по количеству слов), чтобы она была включена в результат.
 
     Returns
     -------
     list[str]
-        Список строк, каждая из которых содержит объединённые фрагменты отзыва.
+        Список строк, каждая из которых содержит объединенные фрагменты отзыва.
     """
     dict_of_none = {'Достоинства' : None, 'Недостатки' : None, 'Комментарий' : None, 'Фото' : None}
     texts = []
     for review in reviews:
         if review != dict_of_none:
-            texts.append('') # if all the values in review is None, but if it has some key, that is not in dict_of_none -> memory leak. need to fix that
+            texts.append('')  # Если все значения в review - None, но есть ключа нет в dict_of_none, происходит утечка памяти. Нужно исправить
             for key, value in review.items():
-                if (value is not None) and (key in dict_of_none.keys()) and (len(value.split(' ')) > review_len_treshold):
+                if (value is not None) and (key in dict_of_none.keys()) and (len(value.split(' ')) > review_len_threshold):
                     texts[-1] += ' ' + value + ' '
     return texts
 
 
-def split_positive_negative_parts(reviews: list[dict], review_min_len_treshold: int) -> tuple[list[str], list[str]]:
+def split_positive_negative_parts(reviews: list[dict], review_min_len_threshold: int) -> tuple[list[str], list[str]]:
     """
     Делит отзывы на положительные и отрицательные части.
 
@@ -38,7 +40,7 @@ def split_positive_negative_parts(reviews: list[dict], review_min_len_treshold: 
     ----------
     reviews : list[dict]
         Список словарей с отзывами.
-    review_min_len_treshold : int
+    review_min_len_threshold : int
         Минимальная длина фразы (по количеству слов), чтобы она попала в результат.
 
     Returns
@@ -53,7 +55,7 @@ def split_positive_negative_parts(reviews: list[dict], review_min_len_treshold: 
     for review in reviews:
         if review != dict_of_none:
             for key, value in review.items():
-                if (value is not None) and (len(value.split(' ')) > review_min_len_treshold):
+                if (value is not None) and (len(value.split(' ')) > review_min_len_threshold):
                     if key == 'Достоинства':
                         positive_list.append(value)
                     elif key == 'Недостатки':
@@ -63,7 +65,7 @@ def split_positive_negative_parts(reviews: list[dict], review_min_len_treshold: 
     return (positive_list, negative_list)
 
 
-def preprocess_list_of_texts(list_of_texts: list[str], to_lower: bool, erase_punct: bool) -> list:
+def preprocess_list_of_texts(list_of_texts: list[str], to_lower: bool, erase_punct: bool) -> list[str]:
     """
     Выполняет базовый препроцессинг текста.
 
@@ -74,24 +76,24 @@ def preprocess_list_of_texts(list_of_texts: list[str], to_lower: bool, erase_pun
     to_lower : bool
         Если True – переводит все символы в нижний регистр.
     erase_punct : bool
-        Если True – удаляет пунктуацию, заменяя её пробелом.
+        Если True – удаляет пунктуацию, заменяя ее пробелом.
 
     Returns
     -------
     list[str]
         Препроцессированные строки.
     """
-    cleadned_list = []
+    cleaned_list = []
     for idx, text in enumerate(list_of_texts):
-        cleadned_list.append(text.lower() if to_lower else text)
+        cleaned_list.append(text.lower() if to_lower else text)
         if erase_punct:
-            cleadned_list[idx] = re.sub(r'[^\w\s]', ' ', cleadned_list[idx])
-        cleadned_list[idx] = re.sub(r'\s+', ' ', cleadned_list[idx])
-    return cleadned_list
+            cleaned_list[idx] = re.sub(r'[^\w\s]', ' ', cleaned_list[idx])
+        cleaned_list[idx] = re.sub(r'\s+', ' ', cleaned_list[idx])
+    return cleaned_list
 
 
-# Возможность пердварительной лемматизации отзывов, перед извлечением ключевых N-грамм
-def lemmatize_texts(list_of_texts: list[str], mystem: Mystem) -> list:
+# Возможность предварительной лемматизации отзывов перед извлечением ключевых N-грамм
+def lemmatize_texts(list_of_texts: list[str], mystem: Mystem) -> list[str]:
     """
     Лемматизирует список строк с помощью pymystem3.
 
@@ -108,9 +110,10 @@ def lemmatize_texts(list_of_texts: list[str], mystem: Mystem) -> list:
         Список лемматизированных строк.
     """
     separator = '!@#$%^&*()'
-    lemmatized_text= ''.join(mystem.lemmatize(separator.join(list_of_texts)))
+    lemmatized_text = ''.join(mystem.lemmatize(separator.join(list_of_texts)))
     lemmatized_list = lemmatized_text.split(separator)
     return lemmatized_list
+
 
 def delete_stop_words(list_of_texts: list[str], language: str, allowed_stopwords: list[str]=None) -> list[str]:
     """
@@ -136,7 +139,6 @@ def delete_stop_words(list_of_texts: list[str], language: str, allowed_stopwords
     for text in list_of_texts:
         list_of_tokens.append(nltk.tokenize.word_tokenize(text, language=language))
     cleaned_corpus_list = []
-    allowed_stopwords = allowed_stopwords
     for review_tokens in list_of_tokens:
         cleaned_corpus = []
         for token in review_tokens:
