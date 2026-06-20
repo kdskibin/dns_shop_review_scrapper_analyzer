@@ -11,3 +11,4 @@ keybert
 nltk
 flask
 hf_xet
+dotenv
